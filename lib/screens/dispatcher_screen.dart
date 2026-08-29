@@ -759,7 +759,7 @@ class _LeftPanel extends StatelessWidget {
                       width: 26,
                       height: 26,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.12),
+                        color: AppColors.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Icon(
@@ -785,10 +785,10 @@ class _LeftPanel extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.pending.withOpacity(0.12),
+                        color: AppColors.pending.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: AppColors.pending.withOpacity(0.35),
+                          color: AppColors.pending.withValues(alpha: 0.35),
                         ),
                       ),
                       child: Text(
@@ -949,17 +949,17 @@ class _MiniStatChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
           decoration: BoxDecoration(
             color: isSelected
-                ? color.withOpacity(0.18)
-                : color.withOpacity(0.08),
+                ? color.withValues(alpha: 0.18)
+                : color.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(7),
             border: Border.all(
-              color: isSelected ? color : color.withOpacity(0.2),
+              color: isSelected ? color : color.withValues(alpha: 0.2),
               width: isSelected ? 1.5 : 1,
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: color.withOpacity(0.2),
+                      color: color.withValues(alpha: 0.2),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -983,7 +983,7 @@ class _MiniStatChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 8,
                   fontWeight: FontWeight.w600,
-                  color: color.withOpacity(0.8),
+                  color: color.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -1061,7 +1061,7 @@ class _RightPanel extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
             decoration: BoxDecoration(
               color: report != null
-                  ? report!.typeColor.withOpacity(0.05)
+                  ? report!.typeColor.withValues(alpha: 0.05)
                   : const Color(0xFFF8F9FA),
               border: const Border(
                 bottom: BorderSide(color: Color(0xFFE8EDF5)),
@@ -1073,8 +1073,8 @@ class _RightPanel extends StatelessWidget {
                   width: 26,
                   height: 26,
                   decoration: BoxDecoration(
-                    color: (report?.typeColor ?? AppColors.primary).withOpacity(
-                      0.12,
+                    color: (report?.typeColor ?? AppColors.primary).withValues(
+                      alpha: 0.12,
                     ),
                     borderRadius: BorderRadius.circular(6),
                   ),
@@ -1119,7 +1119,7 @@ class _RightPanel extends StatelessWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: AppColors.grey.withOpacity(0.08),
+                        color: AppColors.grey.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(7),
                       ),
                       child: const Icon(
@@ -1178,10 +1178,10 @@ class _RightPlaceholder extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.14),
+                color: AppColors.primary.withValues(alpha: 0.14),
                 width: 2,
               ),
             ),
@@ -1332,7 +1332,7 @@ class _EdgeTabState extends State<_EdgeTab> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(_hovered ? 0.15 : 0.08),
+                  color: Colors.black.withValues(alpha: _hovered ? 0.15 : 0.08),
                   blurRadius: _hovered ? 10 : 6,
                   offset: isLeft ? const Offset(2, 0) : const Offset(-2, 0),
                 ),
@@ -1384,12 +1384,12 @@ class _PanelToggleBtn extends StatelessWidget {
           height: 32,
           decoration: BoxDecoration(
             color: isActive
-                ? AppColors.primary.withOpacity(0.1)
+                ? AppColors.primary.withValues(alpha: 0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(7),
             border: Border.all(
               color: isActive
-                  ? AppColors.primary.withOpacity(0.35)
+                  ? AppColors.primary.withValues(alpha: 0.35)
                   : const Color(0xFFE0E4EA),
             ),
           ),

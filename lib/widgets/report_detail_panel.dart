@@ -188,7 +188,7 @@ class ReportDetailPanel extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     report!.typeColor,
-                    report!.typeColor.withOpacity(0.8),
+                    report!.typeColor.withValues(alpha: 0.8),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -244,9 +244,9 @@ class ReportDetailPanel extends StatelessWidget {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.4)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -476,10 +476,10 @@ class ReportDetailPanel extends StatelessWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: AppColors.resolved.withOpacity(0.1),
+                          color: AppColors.resolved.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: AppColors.resolved.withOpacity(0.3),
+                            color: AppColors.resolved.withValues(alpha: 0.3),
                           ),
                         ),
                         child: const Row(
@@ -548,7 +548,7 @@ class _NavigateButton extends StatelessWidget {
             onPressed: hasLocation ? onTap : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1A73E8),
-              disabledBackgroundColor: AppColors.grey.withOpacity(0.2),
+              disabledBackgroundColor: AppColors.grey.withValues(alpha: 0.2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -687,9 +687,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.5)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
       ),
       child: Text(
         status.toUpperCase(),

@@ -2462,7 +2462,7 @@ class _MapErrorFallback extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFFFFF3E0),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFFFCC02).withOpacity(0.4)),
+            border: Border.all(color: const Color(0xFFFFCC02).withValues(alpha: 0.4)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2630,10 +2630,10 @@ class _StatTile extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
           decoration: BoxDecoration(
-            color: isSelected ? color.withOpacity(0.12) : Colors.transparent,
+            color: isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isSelected ? color.withOpacity(0.5) : Colors.transparent,
+              color: isSelected ? color.withValues(alpha: 0.5) : Colors.transparent,
               width: 1.5,
             ),
           ),
@@ -2646,13 +2646,13 @@ class _StatTile extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? color.withOpacity(0.22)
-                      : color.withOpacity(0.12),
+                      ? color.withValues(alpha: 0.22)
+                      : color.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: color.withOpacity(0.3),
+                            color: color.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -2729,7 +2729,7 @@ class _SelectedReportChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: report.typeColor.withOpacity(0.4),
+            color: report.typeColor.withValues(alpha: 0.4),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -2755,7 +2755,7 @@ class _SelectedReportChip extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.22),
+              color: Colors.white.withValues(alpha: 0.22),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
@@ -2793,7 +2793,7 @@ class _MapChip extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8),
         ],
         border: Border.all(color: const Color(0xFFE8EDF5)),
       ),
@@ -2835,7 +2835,7 @@ class _MapButton extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6),
           ],
           border: Border.all(color: const Color(0xFFE8EDF5)),
         ),
@@ -2852,10 +2852,10 @@ class _MapLegend extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.96),
+        color: Colors.white.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.09), blurRadius: 8),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.09), blurRadius: 8),
         ],
         border: Border.all(color: const Color(0xFFE8EDF5)),
       ),

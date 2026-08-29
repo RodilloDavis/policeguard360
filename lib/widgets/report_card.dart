@@ -29,20 +29,20 @@ class ReportCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: isSelected ? report.typeColor.withOpacity(0.08) : Colors.white,
+          color: isSelected ? report.typeColor.withValues(alpha: 0.08) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? report.typeColor
                 : (report.status == 'Pending'
-                      ? AppColors.pending.withOpacity(0.4)
-                      : report.statusColor.withOpacity(0.3)),
+                      ? AppColors.pending.withValues(alpha: 0.4)
+                      : report.statusColor.withValues(alpha: 0.3)),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: (isSelected ? report.typeColor : Colors.black).withOpacity(
-                0.06,
+              color: (isSelected ? report.typeColor : Colors.black).withValues(
+                alpha: 0.06,
               ),
               blurRadius: 8,
               offset: const Offset(0, 2),
@@ -56,7 +56,7 @@ class ReportCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: report.typeColor.withOpacity(0.1),
+                color: report.typeColor.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(11),
                 ),
@@ -178,7 +178,7 @@ class ReportCard extends StatelessWidget {
                             : report.reportId,
                         style: TextStyle(
                           fontSize: 10,
-                          color: AppColors.grey.withOpacity(0.7),
+                          color: AppColors.grey.withValues(alpha: 0.7),
                           fontFamily: 'monospace',
                         ),
                       ),
@@ -287,9 +287,9 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -336,9 +336,9 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 7),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
