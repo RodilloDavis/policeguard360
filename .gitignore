@@ -49,3 +49,4 @@ app.*.map.json
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 err.txt
+errors.txt
