@@ -129,7 +129,7 @@ class DispatcherApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'LifeGuard360 Dispatcher',
+      title: 'PoliceGuard360 Dispatcher',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
@@ -196,19 +196,14 @@ class _SplashRouterState extends State<_SplashRouter> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.all(Radius.circular(20)),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(18),
-                child: Icon(Icons.local_police, color: Colors.white, size: 42),
-              ),
+            Image(
+              image: AssetImage('assets/icon/logo.png'),
+              width: 110,
+              height: 110,
             ),
             SizedBox(height: 20),
             Text(
-              'LifeGuard360',
+              'PoliceGuard360',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,

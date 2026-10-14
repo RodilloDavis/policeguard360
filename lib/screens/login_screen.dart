@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../core/app_colors.dart';
 import '../services/auth_service.dart';
 import '../services/dispatcher_presence.dart';
+import '../services/google_auth_service.dart';
+import '../widgets/google_button.dart';
 import 'sign_up_screen.dart';
 import 'dispatcher_screen.dart';
 
@@ -18,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   @override
   void dispose() {
@@ -39,44 +42,116 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (result['success'] == true) {
-      // ✅ Save session to SharedPreferences so the user is automatically
-      // logged in next time they open the app without needing to sign in again.
-      await AuthService.saveSession(result);
+      await _completeLogin(result);
+    } else {
+      _showError(result['error'] ?? 'Login failed. Please try again.');
+    }
+  }
 
-      // ✅ Start presence tracking — writes OnlineStatus/LastSeen to
-      // /DispatcherAccounts/{userId} and registers an onDisconnect() hook
-      // on Firebase's server so status auto-flips to Offline if the
-      // connection drops unexpectedly.
-      final userId = result['userId']?.toString() ?? '';
-      if (userId.isNotEmpty) {
-        await DispatcherPresence.initialize(userId, 'DispatcherAccounts');
+  /// Shared tail for both password and Google login — saves the session,
+  /// starts presence tracking, and lands on the dispatcher dashboard.
+  Future<void> _completeLogin(Map<String, dynamic> result) async {
+    // ✅ Save session to SharedPreferences so the user is automatically
+    // logged in next time they open the app without needing to sign in again.
+    await AuthService.saveSession(result);
+
+    // ✅ Start presence tracking — writes OnlineStatus/LastSeen to
+    // /DispatcherAccounts/{userId} and registers an onDisconnect() hook
+    // on Firebase's server so status auto-flips to Offline if the
+    // connection drops unexpectedly.
+    final userId = result['userId']?.toString() ?? '';
+    if (userId.isNotEmpty) {
+      await DispatcherPresence.initialize(userId, 'DispatcherAccounts');
+    }
+
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const DispatcherScreen()),
+    );
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isGoogleLoading = true);
+    try {
+      final googleResult = await GoogleAuthService.signIn();
+      if (!mounted) return;
+      if (googleResult == null) {
+        // User cancelled the account picker.
+        setState(() => _isGoogleLoading = false);
+        return;
       }
 
+      final result =
+          await AuthService.loginWithGoogle(googleUid: googleResult.uid);
+
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const DispatcherScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result['error'] ?? 'Login failed. Please try again.',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+
+      if (result['success'] == true) {
+        await _completeLogin(result);
+        if (mounted) setState(() => _isGoogleLoading = false);
+      } else {
+        // No linked account yet — this Google identity hasn't signed up.
+        await GoogleAuthService.signOut();
+        if (!mounted) return;
+        setState(() => _isGoogleLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result['error'] ??
+                  'No account is linked to this Google account. Please sign up first.',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Sign Up',
+              textColor: Colors.white,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                );
+              },
             ),
           ),
-          backgroundColor: AppColors.danger,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 4),
-        ),
-      );
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isGoogleLoading = false);
+        _showError('Google sign-in failed: $e');
+      }
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: AppColors.danger,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 4),
+      ),
+    );
   }
 
   @override
@@ -108,22 +183,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Logo
-                    Container(
-                      width: 68,
-                      height: 68,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: const Icon(
-                        Icons.local_police,
-                        color: Colors.white,
-                        size: 36,
-                      ),
+                    Image.asset(
+                      'assets/icon/logo.png',
+                      width: 92,
+                      height: 92,
                     ),
                     const SizedBox(height: 14),
                     const Text(
-                      'LifeGuard360',
+                      'PoliceGuard360',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
@@ -238,6 +305,38 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                       ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // OR divider
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Divider(color: Color(0xFFE0E4EA)),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'OR',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.grey,
+                            ),
+                          ),
+                        ),
+                        const Expanded(
+                          child: Divider(color: Color(0xFFE0E4EA)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Google Sign-In
+                    GoogleButton(
+                      text: 'Continue with Google',
+                      isLoading: _isGoogleLoading,
+                      onPressed: _handleGoogleLogin,
                     ),
                     const SizedBox(height: 20),
 

@@ -310,7 +310,7 @@ class _DispatcherScreenState extends State<DispatcherScreen>
           children: [
             const Icon(Icons.logout, color: AppColors.danger),
             const SizedBox(width: 10),
-            const Expanded(child: Text('Exit LifeGuard360?')),
+            const Expanded(child: Text('Exit PoliceGuard360?')),
           ],
         ),
         content: const Text(
@@ -501,7 +501,7 @@ class _DispatcherScreenState extends State<DispatcherScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'LifeGuard360',
+                  'PoliceGuard360',
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   style: TextStyle(

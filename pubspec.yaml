@@ -1,7 +1,7 @@
 name: policeguard360
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
+version: 0.1.0+2
 
 environment:
   sdk: ^3.10.7
@@ -27,11 +27,35 @@ dependencies:
   # Signs the JWT used to obtain an FCM v1 OAuth token, so an acknowledge
   # message can be pushed straight to the reporter's device.
   dart_jsonwebtoken: ^3.3.2
+  # Google Sign-In — same versions as LifeGuard360 main app
+  firebase_auth: ^6.5.7
+  google_sign_in: 6.2.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
+  assets:
+    - shorebird.yaml
+    - assets/icon/logo.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/icon.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/icon/icon_foreground.png
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: assets/icon/icon.png
+  windows:
+    generate: true
+    image_path: assets/icon/icon.png
+  macos:
+    generate: true
+    image_path: assets/icon/icon.png

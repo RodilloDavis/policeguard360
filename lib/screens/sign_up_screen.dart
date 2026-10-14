@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../core/app_colors.dart';
 import '../services/auth_service.dart';
+import '../services/dispatcher_presence.dart';
+import '../services/google_auth_service.dart';
+import '../widgets/google_button.dart';
 import 'login_screen.dart';
+import 'dispatcher_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -20,6 +24,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
+  bool _isGoogleSignup = false;
+  String? _googleUid;
+  String? _googlePhotoUrl;
   String _selectedRank = 'Officer';
 
   final _ranks = [
@@ -43,21 +51,111 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
+  /// Kicks off the Google picker, checks the resulting email isn't already
+  /// registered, then pre-fills the form so the user only has to add Badge
+  /// Number and Rank before submitting — no password needed.
+  Future<void> _handleGoogleSignup() async {
+    setState(() => _isGoogleLoading = true);
+    try {
+      final googleResult = await GoogleAuthService.signIn();
+      if (!mounted) return;
+      if (googleResult == null) {
+        // User cancelled the account picker.
+        setState(() => _isGoogleLoading = false);
+        return;
+      }
+
+      final alreadyRegistered =
+          await AuthService.checkEmailExists(googleResult.email);
+      if (!mounted) return;
+      if (alreadyRegistered) {
+        await GoogleAuthService.signOut();
+        if (!mounted) return;
+        setState(() => _isGoogleLoading = false);
+        _showSnack(
+          'This Google account is already registered. Please log in instead.',
+          AppColors.danger,
+        );
+        return;
+      }
+
+      setState(() {
+        _isGoogleLoading = false;
+        _isGoogleSignup = true;
+        _googleUid = googleResult.uid;
+        _googlePhotoUrl = googleResult.photoUrl;
+        _nameController.text = googleResult.displayName;
+        _emailController.text = googleResult.email;
+      });
+
+      _showSnack(
+        'Signed in as ${googleResult.email}. Please finish your profile below.',
+        AppColors.success,
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isGoogleLoading = false);
+        _showSnack('Google sign-in failed: $e', AppColors.danger);
+      }
+    }
+  }
+
+  void _showSnack(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    final result = await AuthService.signUp(
-      fullName: _nameController.text.trim(),
-      badgeNumber: _badgeController.text.trim(),
-      rank: _selectedRank,
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    final result = _isGoogleSignup
+        ? await AuthService.signUpWithGoogle(
+            googleUid: _googleUid!,
+            fullName: _nameController.text.trim(),
+            badgeNumber: _badgeController.text.trim(),
+            rank: _selectedRank,
+            email: _emailController.text.trim(),
+            photoUrl: _googlePhotoUrl,
+          )
+        : await AuthService.signUp(
+            fullName: _nameController.text.trim(),
+            badgeNumber: _badgeController.text.trim(),
+            rank: _selectedRank,
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
 
     if (!mounted) return;
     setState(() => _isLoading = false);
+
+    if (result['success'] == true && _isGoogleSignup) {
+      // Google accounts skip the "created — go log in" dialog and land
+      // straight in the app, same as the login flow.
+      await AuthService.saveSession(result);
+      final userId = result['userId']?.toString() ?? '';
+      if (userId.isNotEmpty) {
+        await DispatcherPresence.initialize(userId, 'DispatcherAccounts');
+      }
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DispatcherScreen()),
+      );
+      return;
+    }
 
     if (result['success'] == true) {
       // Show success dialog — NO admin approval mention
@@ -251,6 +349,65 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     const SizedBox(height: 26),
 
+                    if (!_isGoogleSignup) ...[
+                      // Google Sign-Up
+                      GoogleButton(
+                        text: 'Sign Up with Google',
+                        isLoading: _isGoogleLoading,
+                        onPressed: _handleGoogleSignup,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Divider(color: Color(0xFFE0E4EA)),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.grey,
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            child: Divider(color: Color(0xFFE0E4EA)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ] else ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle,
+                                color: AppColors.success, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Signed in with Google as ${_emailController.text}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.success,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     // Full Name
                     _label('Full Name'),
                     TextFormField(
@@ -327,6 +484,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     _label('Email Address'),
                     TextFormField(
                       controller: _emailController,
+                      enabled: !_isGoogleSignup,
                       keyboardType: TextInputType.emailAddress,
                       decoration: _inputDeco(
                         hint: 'Enter your email',
@@ -341,66 +499,69 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Password
-                    _label('Password'),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: _inputDeco(
-                        hint: 'Create a password',
-                        icon: Icons.lock_outline,
-                        suffix: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: AppColors.grey,
-                            size: 20,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
+                    if (!_isGoogleSignup) ...[
+                      // Password
+                      _label('Password'),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: _inputDeco(
+                          hint: 'Create a password',
+                          icon: Icons.lock_outline,
+                          suffix: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: AppColors.grey,
+                              size: 20,
+                            ),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                           ),
                         ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty)
+                            return 'Password is required';
+                          if (v.length < 6) return 'Minimum 6 characters';
+                          return null;
+                        },
                       ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty)
-                          return 'Password is required';
-                        if (v.length < 6) return 'Minimum 6 characters';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 14),
+                      const SizedBox(height: 14),
 
-                    // Confirm Password
-                    _label('Confirm Password'),
-                    TextFormField(
-                      controller: _confirmController,
-                      obscureText: _obscureConfirm,
-                      decoration: _inputDeco(
-                        hint: 'Re-enter your password',
-                        icon: Icons.lock_outline,
-                        suffix: IconButton(
-                          icon: Icon(
-                            _obscureConfirm
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: AppColors.grey,
-                            size: 20,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscureConfirm = !_obscureConfirm,
+                      // Confirm Password
+                      _label('Confirm Password'),
+                      TextFormField(
+                        controller: _confirmController,
+                        obscureText: _obscureConfirm,
+                        decoration: _inputDeco(
+                          hint: 'Re-enter your password',
+                          icon: Icons.lock_outline,
+                          suffix: IconButton(
+                            icon: Icon(
+                              _obscureConfirm
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: AppColors.grey,
+                              size: 20,
+                            ),
+                            onPressed: () => setState(
+                              () => _obscureConfirm = !_obscureConfirm,
+                            ),
                           ),
                         ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty)
+                            return 'Please confirm your password';
+                          if (v != _passwordController.text)
+                            return 'Passwords do not match';
+                          return null;
+                        },
                       ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty)
-                          return 'Please confirm your password';
-                        if (v != _passwordController.text)
-                          return 'Passwords do not match';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 28),
+                      const SizedBox(height: 14),
+                    ],
+                    const SizedBox(height: 14),
 
                     // Create Account Button
                     SizedBox(

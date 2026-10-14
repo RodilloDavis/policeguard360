@@ -295,4 +295,160 @@ class AuthService {
       };
     }
   }
+
+  // ── GOOGLE SIGN-IN ───────────────────────────────────────────────────────
+
+  /// Returns true if an account with this email already exists — used before
+  /// showing the "finish your profile" step so a Google sign-up doesn't ask
+  /// for badge/rank only to be rejected at the very end.
+  static Future<bool> checkEmailExists(String email) async {
+    email = email.trim().toLowerCase();
+    try {
+      final resp = await http
+          .get(Uri.parse('${_dbUrl}DispatcherAccounts.json'))
+          .timeout(const Duration(seconds: 20));
+      if (resp.statusCode == 200) {
+        final raw = json.decode(resp.body);
+        if (raw != null && raw is Map) {
+          return raw.values.any(
+            (a) =>
+                a is Map &&
+                (a['Email']?.toString().toLowerCase() ?? '') == email,
+          );
+        }
+      }
+      return false;
+    } catch (e) {
+      throw Exception('Failed to check email: $e');
+    }
+  }
+
+  /// Looks up a dispatcher account by the GoogleUid stamped on it during
+  /// [signUpWithGoogle]. Unlike [login], there is no password to check —
+  /// a matching GoogleUid *is* the credential.
+  static Future<Map<String, dynamic>> loginWithGoogle({
+    required String googleUid,
+  }) async {
+    try {
+      final resp = await http
+          .get(Uri.parse('${_dbUrl}DispatcherAccounts.json'))
+          .timeout(const Duration(seconds: 20));
+
+      if (resp.statusCode != 200) {
+        return {
+          'success': false,
+          'error': 'Server error (HTTP ${resp.statusCode}).',
+        };
+      }
+
+      final raw = json.decode(resp.body);
+      if (raw == null || raw is! Map || raw.isEmpty) {
+        return {
+          'success': false,
+          'error':
+              'No account is linked to this Google account. Please sign up first.',
+        };
+      }
+
+      String? matchedId;
+      Map<String, dynamic>? matchedAcc;
+
+      for (final entry in (raw as Map).entries) {
+        final acc = entry.value;
+        if (acc is Map && acc['GoogleUid']?.toString() == googleUid) {
+          matchedId = entry.key.toString();
+          matchedAcc = Map<String, dynamic>.from(acc);
+          break;
+        }
+      }
+
+      if (matchedAcc == null) {
+        return {
+          'success': false,
+          'error':
+              'No account is linked to this Google account. Please sign up first.',
+        };
+      }
+
+      return {
+        'success': true,
+        'userId': matchedId,
+        'fullName': matchedAcc['FullName'] ?? 'Dispatcher',
+        'email': matchedAcc['Email'] ?? '',
+        'rank': matchedAcc['Rank'] ?? '',
+        'badgeNumber': matchedAcc['BadgeNumber'] ?? '',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Connection error. Check your internet.\nDetails: $e',
+      };
+    }
+  }
+
+  /// Creates a dispatcher account linked to a Google identity — stores
+  /// GoogleUid instead of a Password, so [login] (password-based) can never
+  /// match this record and only [loginWithGoogle] can sign it back in.
+  static Future<Map<String, dynamic>> signUpWithGoogle({
+    required String googleUid,
+    required String fullName,
+    required String badgeNumber,
+    required String rank,
+    required String email,
+    String? photoUrl,
+  }) async {
+    email = email.trim().toLowerCase();
+
+    try {
+      if (await checkEmailExists(email)) {
+        return {
+          'success': false,
+          'error': 'This email is already registered. Please log in.',
+        };
+      }
+
+      final now = DateTime.now().toIso8601String();
+      final body = json.encode({
+        'FullName': fullName.trim(),
+        'BadgeNumber': badgeNumber.trim(),
+        'Rank': rank,
+        'Email': email,
+        'GoogleUid': googleUid,
+        if (photoUrl != null && photoUrl.isNotEmpty) 'PhotoUrl': photoUrl,
+        'Role': 'Dispatcher',
+        'Status': 'Active',
+        'CreatedAt': now,
+      });
+
+      final saveResp = await http
+          .post(
+            Uri.parse('${_dbUrl}DispatcherAccounts.json'),
+            headers: {'Content-Type': 'application/json'},
+            body: body,
+          )
+          .timeout(const Duration(seconds: 20));
+
+      if (saveResp.statusCode >= 200 && saveResp.statusCode < 300) {
+        final data = json.decode(saveResp.body);
+        return {
+          'success': true,
+          'userId': data['name'],
+          'fullName': fullName.trim(),
+          'email': email,
+          'rank': rank,
+          'badgeNumber': badgeNumber.trim(),
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Failed to save account (HTTP ${saveResp.statusCode}).',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Connection error. Check your internet.\nDetails: $e',
+      };
+    }
+  }
 }
